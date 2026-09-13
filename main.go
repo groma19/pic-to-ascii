@@ -10,23 +10,59 @@ import (
 )
 
 func main() {
-	chars := []rune("@%#*+=-:. ")
-	fmt.Println("Helloo", chars)
+	const ASCII_IMG_SIZE = 256
 
-	file, err := os.Open("random-person.jpeg")
+	img, err := getImg("testImages/me.png")
 	if err != nil {
-		log.Fatalf("Failed to open file: %v", err)
+		log.Fatal(err)
+	}
+
+	resizedImg := getResizedImg(img, ASCII_IMG_SIZE)
+
+	writeASCII(resizedImg)
+}
+
+func getImg(path string) (image.Image, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open image: %w", err)
 	}
 	defer file.Close()
 
-	img, format, err := image.Decode(file)
+	img, _, err := image.Decode(file)
 	if err != nil {
-		log.Fatalf("Failed to decode image: %v", err)
+		return nil, fmt.Errorf("Failed to decode image: %w", err)
 	}
-	fmt.Printf("Image format is: %s\n", format)
 
+	return img, nil
+}
+
+func getResizedImg(src image.Image, width int) image.Image {
+	const HEIGHT_SCALING = 2
+	bounds := src.Bounds()
+
+	srcW := bounds.Dx()
+	srcH := bounds.Dy()
+
+	height := srcH * width / srcW / HEIGHT_SCALING
+
+	dst := image.NewRGBA(image.Rect(0, 0, width, height))
+
+	for y := range height {
+		for x := range width {
+			srcX := x * srcW / width
+			srcY := y * srcH / height
+
+			dst.Set(x, y, src.At(srcX+bounds.Min.X, srcY+bounds.Min.Y))
+		}
+	}
+
+	return dst
+}
+
+func writeASCII(img image.Image) {
+	chars := []rune(" .:-=+*#%@")
 	bounds := img.Bounds()
-	fmt.Println(bounds)
 
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
