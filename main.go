@@ -10,9 +10,17 @@ import (
 )
 
 func main() {
+	if len(os.Args) < 2 {
+		log.Fatal("usage: ascii-art <image-path>")
+	}
+
+	generateASCII(os.Args[1])
+}
+
+func generateASCII(imgPath string) {
 	const ASCII_IMG_SIZE = 256
 
-	img, err := getImg("testImages/me.png")
+	img, err := getImg(imgPath)
 	if err != nil {
 		log.Fatal(err)
 	}
